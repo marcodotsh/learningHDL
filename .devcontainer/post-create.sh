@@ -37,4 +37,4 @@ fi
 if [[ ! -f "/usr/local/bin/verible-verilog-format" ]]; then
     tar -C /usr/local --strip-components 1 -xf $VERIBLE_TAR
 fi
-rm $VERIB
+rm $VERIBLE_TAR

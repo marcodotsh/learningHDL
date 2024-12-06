@@ -11,8 +11,8 @@ module blocked #(
     for (i = 0; i < N; i = i + 1) begin : gen_row
       for (j = 0; j < N; j = j + 1) begin : gen_col
         if (i == j) assign res[i][j] = 0;
-        else if (i > j) assign res[i][j] = !(|p[j+1+:N-i]);
-        else if (i < j) assign res[i][j] = |p[i+1+:N-j];
+        else if (i < j) assign res[i][j] = |p[i+1+:j-i];
+        else if (i > j) assign res[i][j] = !(|p[j+1+:i-j]);
       end
     end
   endgenerate

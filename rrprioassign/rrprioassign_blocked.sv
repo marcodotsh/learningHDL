@@ -1,9 +1,12 @@
-module blocked #(
-    parameter int N = 4
-) (
-    input logic [N-1:0] p,
-    output logic [N-1:0][N-1:0] res
+module rrprioassign_blocked (
+    p,
+    res
 );
+
+  import rrprioassign_pkg::*;
+
+  input logic [N-1:0] p;
+  output logic [N-1:0][N-1:0] res;
 
   genvar i;
   genvar j;

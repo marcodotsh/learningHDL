@@ -2,7 +2,8 @@
 
 module rrprioassign_tb;
 
-  localparam int N = 8;  // Component bit width
+  import rrprioassign_pkg::*;
+
   localparam int T = 10;  // Clock period in ns
 
   logic clk;
@@ -13,9 +14,7 @@ module rrprioassign_tb;
   int initialValue;
 
   // Instantiate the module under test
-  rrprioassign #(
-      .N(N)
-  ) u_rrprioassign (
+  rrprioassign u_rrprioassign (
       .r  (r),
       .p  (p),
       .res(res)

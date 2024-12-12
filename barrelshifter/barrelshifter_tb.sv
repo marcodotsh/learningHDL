@@ -1,5 +1,7 @@
 `timescale 1ns / 100ps
 
+`include "barrelshifter.sv"
+
 module barrelshifter_tb;
 
   import barrelshifter_pkg::*;

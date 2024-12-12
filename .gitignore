@@ -1,4 +1,2 @@
-example/counter_tb
+*.vvp
 *.vcd
-rrprioassign/rrprioassign
-barrelshifter/barrelshifter

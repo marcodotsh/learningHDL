@@ -1,3 +1,5 @@
+`include "rrprioassign_blocked.sv"
+
 module rrprioassign (
     r,
     p,

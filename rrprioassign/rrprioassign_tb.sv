@@ -1,5 +1,7 @@
 `timescale 1ns / 100ps
 
+`include "rrprioassign.sv"
+
 module rrprioassign_tb;
 
   import rrprioassign_pkg::*;

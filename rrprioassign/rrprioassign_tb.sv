@@ -8,7 +8,6 @@ module rrprioassign_tb;
 
   localparam int T = 10;  // Clock period
 
-  logic clk;
   logic [N-1:0] r;
   logic [N-1:0] p;
   logic [N-1:0] res;
@@ -22,23 +21,15 @@ module rrprioassign_tb;
       .res(res)
   );
 
-  // Clock generation
-  always begin
-    clk = 1'b1;
-    #(T / 2.0);
-    clk = 1'b0;
-    #(T / 2.0);
-  end
-
   // Test stimulus
   initial begin
-    r <= 0;  //No requests
-    p <= 1;  //Default priority
+    r = 0;  //No requests
+    p = 1;  //Default priority
 
     for (int i = 0; i < 2 ** 10; i++) begin
       #1 begin
-        r <= $urandom;
-        p <= 1 << ($urandom % N);
+        r = $urandom;
+        p = 1 << ($urandom % N);
       end
     end
 

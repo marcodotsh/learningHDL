@@ -4,14 +4,14 @@ import re
 import sys
 
 def check_res(input : str, offset : str, out : str):
-    shift = int(offset,10)
+    shift = int(offset,2)
     return input == (out[-shift:]+out[0:len(out)-shift])
 
 
 for line in sys.stdin:
-    if(re.search(r'in=([01]*) offset=([0-9]*) out=([01]*)',line) == None): continue
+    if(re.search(r'in=([01]*) offset=([01]*) out=([01]*)',line) == None): continue
 
-    input, offset, out = re.search(r'in=([01]*) offset=([0-9]*) out=([01]*)',line).groups()
+    input, offset, out = re.search(r'in=([01]*) offset=([01]*) out=([01]*)',line).groups()
     
     if(check_res(input,offset,out)):
         print("Correct result")

@@ -16,6 +16,10 @@
         "mshr-h.veriloghdl",
         "ms-python.python"
       ]
-    }
+    },
+    "mounts": [
+      "source=${localWorkspaceFolder}/.devcontainer/install_config.txt,target=/install_config.txt,type=bind,consistency=cached",
+      "source=${localWorkspaceFolder}/.devcontainer/install_config.txt,target=/install_config.txt,type=bind,consistency=cached"
+    ]
   }
 }

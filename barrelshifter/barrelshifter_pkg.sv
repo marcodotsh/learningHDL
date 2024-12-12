@@ -1,3 +1,3 @@
 package barrelshifter_pkg;
-  parameter int W = 6;
+  parameter int W = 5;
 endpackage

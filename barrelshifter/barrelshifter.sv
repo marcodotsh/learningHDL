@@ -18,7 +18,7 @@ module barrelshifter (
   genvar j;
   generate
     for (i = 0; i < W; i++) begin : gen_shiftAndDouble
-      assign partial[i+1] = offset[i] ? 
+      assign partial[i+1] = offset[i] ?
       {partial[i][2**W-1-2**i:0],partial[i][2**W-1:2**W-2**i]} :
        partial[i];
     end

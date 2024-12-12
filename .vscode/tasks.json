@@ -1,0 +1,61 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "MODULE=${fileDirnameBasename}",
+                "compile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "icon": {
+                "id": "tools"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Execute",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "MODULE=${fileDirnameBasename}",
+                "execute"
+            ],
+            "icon": {
+                "id": "play"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Verify",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "MODULE=${fileDirnameBasename}",
+                "verify"
+            ],
+            "icon": {
+                "id": "check"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "MODULE=${fileDirnameBasename}",
+                "clean"
+            ],
+            "icon": {
+                "id": "trash"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

@@ -45,14 +45,25 @@ MIRROR_IP=
 VIVADO_TAR_FILE=Xilinx_Vivado_SDK_2018.3_1207_2324
 VIVADO_VERSION=2018.3
 
-if [[ ! -z MIRROR_IP ]]
+if [[ ! -z $MIRROR_IP ]]
+then
+
+dpkg --add-architecture i386
+
+apt-get update && apt-get install -y wget build-essential libglib2.0-0 libsm6 libxi6 libxrender1 libxrandr2 libfreetype6 libfontconfig1 locales git gawk iproute2 python3 gcc make net-tools libncurses5-dev tftpd zlib1g-dev libssl-dev flex bison libselinux1 gnupg git-core diffstat chrpath socat xterm autoconf libtool rsync texinfo gcc-multilib zlib1g:i386 lsb-release libtinfo5 dnsutils bc unzip
+
+if [ ! -f ${VIVADO_TAR_FILE}.tar.gz ]
 then
 wget ${MIRROR_IP}/${VIVADO_TAR_FILE}.tar.gz -q
+fi
 tar xzf ${VIVADO_TAR_FILE}.tar.gz
 ./${VIVADO_TAR_FILE}/xsetup --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Install --config ./.devcontainer/install_config.txt
 rm -rf ${VIVADO_TAR_FILE}*
 
 echo "source /opt/Xilinx/Vivado/${VIVADO_VERSION}/settings64.sh" >> /root/.profile
+
 else
+
 echo "Skipping Vivado installation"
+
 fi

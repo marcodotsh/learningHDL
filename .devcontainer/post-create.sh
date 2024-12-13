@@ -45,7 +45,7 @@ MIRROR_IP=
 VIVADO_TAR_FILE=Xilinx_Vivado_SDK_2018.3_1207_2324
 VIVADO_VERSION=2018.3
 
-if [[ ! -z $MIRROR_IP ]]
+if [[ ! -z $MIRROR_IP || -f ${VIVADO_TAR_FILE}.tar.gz ]]
 then
 
 dpkg --add-architecture i386

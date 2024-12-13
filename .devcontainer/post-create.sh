@@ -50,7 +50,7 @@ then
 
 dpkg --add-architecture i386
 
-apt-get update && apt-get install -y wget build-essential libglib2.0-0 libsm6 libxi6 libxrender1 libxrandr2 libfreetype6 libfontconfig1 locales git gawk iproute2 python3 gcc make net-tools libncurses5-dev tftpd zlib1g-dev libssl-dev flex bison libselinux1 gnupg git-core diffstat chrpath socat xterm autoconf libtool rsync texinfo gcc-multilib zlib1g:i386 lsb-release libtinfo5 dnsutils bc unzip
+apt-get update && apt-get install -y wget build-essential libglib2.0-0 libsm6 libxi6 libxrender1 libxrandr2 libfreetype6 libfontconfig1 locales git gawk iproute2 python3 gcc make net-tools libncurses5 libncurses5-dev tftpd zlib1g-dev libssl-dev flex bison libselinux1 gnupg git-core diffstat chrpath socat xterm autoconf libtool rsync texinfo gcc-multilib zlib1g:i386 lsb-release libtinfo5 dnsutils bc unzip
 
 if [ ! -f ${VIVADO_TAR_FILE}.tar.gz ]
 then

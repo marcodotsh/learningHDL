@@ -56,6 +56,21 @@
                 "id": "trash"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Vivado",
+            "type": "process",
+            "options": {
+                "env": {
+                    "LD_PRELOAD": "/lib/x86_64-linux-gnu/libudev.so.1"
+                }
+            },
+            "command": "/opt/Xilinx/Vivado/2018.3/bin/vivado",
+            "args": [],
+            "icon": {
+                "id": "package"
+            },
+            "problemMatcher": []
         }
     ]
 }

@@ -1,3 +1,16 @@
 *.vvp
 *.vcd
+
 vivado*
+hs_*
+
+*.cache
+.metadata
+*.data
+*.ipdefs
+.Xil
+*.sdk
+*.hw
+*.ip_user_files
+*.runs
+*.sim

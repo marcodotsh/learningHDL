@@ -1,5 +1,8 @@
 *.vvp
 *.vcd
+*.out
+*.cf
+*.ghw
 
 vivado*
 hs_*
@@ -15,3 +18,4 @@ hs_*
 *.runs
 *.sim
 Xilinx_*
+

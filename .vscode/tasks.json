@@ -4,10 +4,10 @@
         {
             "label": "Compile",
             "type": "shell",
-            "command": "make",
+            "command": "sh",
             "args": [
-                "MODULE=${fileDirnameBasename}",
-                "compile"
+                "-c",
+                "hdl=$(sh ./.vscode/detect_hdl.sh ${fileBasename}); make MODULE=${fileDirnameBasename} HDL=$hdl compile"
             ],
             "group": {
                 "kind": "build",
@@ -21,10 +21,10 @@
         {
             "label": "Execute",
             "type": "shell",
-            "command": "make",
+            "command": "sh",
             "args": [
-                "MODULE=${fileDirnameBasename}",
-                "execute"
+                "-c",
+                "hdl=$(sh ./.vscode/detect_hdl.sh ${fileBasename}); make MODULE=${fileDirnameBasename} HDL=$hdl execute"
             ],
             "icon": {
                 "id": "play"
@@ -34,10 +34,10 @@
         {
             "label": "Verify",
             "type": "shell",
-            "command": "make",
+            "command": "sh",
             "args": [
-                "MODULE=${fileDirnameBasename}",
-                "verify"
+                "-c",
+                "hdl=$(sh ./.vscode/detect_hdl.sh ${fileBasename}); make MODULE=${fileDirnameBasename} HDL=$hdl verify"
             ],
             "icon": {
                 "id": "check"
@@ -47,10 +47,10 @@
         {
             "label": "Clean",
             "type": "shell",
-            "command": "make",
+            "command": "sh",
             "args": [
-                "MODULE=${fileDirnameBasename}",
-                "clean"
+                "-c",
+                "hdl=$(sh ./.vscode/detect_hdl.sh ${fileBasename}); make MODULE=${fileDirnameBasename} HDL=$hdl clean"
             ],
             "icon": {
                 "id": "trash"

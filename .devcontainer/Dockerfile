@@ -16,12 +16,14 @@ RUN apt update \
     dbus-x11 \
     git \
     gtkwave \
+
     iverilog \
     jq \
     python3-pip \
     universal-ctags \
     verilator \
     wget \
+    ghdl \
     && rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
 
 # Install python dependencies

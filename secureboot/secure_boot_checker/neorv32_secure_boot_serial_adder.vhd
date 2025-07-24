@@ -27,11 +27,22 @@ architecture neorv32_secure_boot_serial_adder_rtl of neorv32_secure_boot_serial_
   constant NUM_CHUNKS   : integer := (WIDTH + CHUNK_SIZE - 1) / CHUNK_SIZE;
   constant PADDED_WIDTH : integer := NUM_CHUNKS * CHUNK_SIZE;
 
-  signal s_reg : unsigned(PADDED_WIDTH - 1 downto 0);
+  -- Explicitly define chunks as an array to guide the synthesizer
+  type chunk_array_t is array (0 to NUM_CHUNKS - 1) of unsigned(CHUNK_SIZE - 1 downto 0);
+  signal a_chunks, b_chunks : chunk_array_t;
+
+  signal s_reg       : unsigned(PADDED_WIDTH - 1 downto 0);
   signal chunk_index : integer range 0 to NUM_CHUNKS - 1;
   signal carry       : std_ulogic;
 
 begin
+
+  -- Combinatorially wire the input vectors to the chunk arrays.
+  -- This describes the parallel connections to the MUX inputs.
+  gen_chunk_wiring : for i in 0 to NUM_CHUNKS - 1 generate
+    a_chunks(i) <= resize(unsigned(a_i), PADDED_WIDTH)((i + 1) * CHUNK_SIZE - 1 downto i * CHUNK_SIZE);
+    b_chunks(i) <= resize(unsigned(b_i), PADDED_WIDTH)((i + 1) * CHUNK_SIZE - 1 downto i * CHUNK_SIZE);
+  end generate;
 
   process(clk_i, rst_i)
     variable a_chunk, b_chunk_mod : unsigned(CHUNK_SIZE - 1 downto 0);
@@ -55,9 +66,9 @@ begin
           end if;
 
         when RUN =>
-          -- Get current chunks directly from inputs
-          a_chunk := resize(unsigned(a_i), PADDED_WIDTH)((chunk_index + 1) * CHUNK_SIZE - 1 downto chunk_index * CHUNK_SIZE);
-          b_chunk_mod := resize(unsigned(b_i), PADDED_WIDTH)((chunk_index + 1) * CHUNK_SIZE - 1 downto chunk_index * CHUNK_SIZE);
+          -- Select the current chunk using a simple array lookup (efficient MUX)
+          a_chunk := a_chunks(chunk_index);
+          b_chunk_mod := b_chunks(chunk_index);
 
           -- Modify B for subtraction
           if add_sub_i = '1' then

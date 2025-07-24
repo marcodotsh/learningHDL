@@ -23,7 +23,7 @@ architecture neorv32_secure_boot_mod_mult_rtl of neorv32_secure_boot_mod_mult is
   component neorv32_secure_boot_serial_adder is
     generic (
       WIDTH      : integer := RSA_KEY_SIZE + 2;
-      CHUNK_SIZE : integer := 36
+      CHUNK_SIZE : integer := 35
     );
     port (
       clk_i     : in std_ulogic;

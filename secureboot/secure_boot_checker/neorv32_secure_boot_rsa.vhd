@@ -2,30 +2,36 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity neorv32_secure_boot_rsa2048 is
+entity neorv32_secure_boot_rsa is
+  generic (
+    RSA_KEY_SIZE : integer := 2048
+  );
   port (
     clk_i      : in std_ulogic;
     rstn_i     : in std_ulogic;
     start_i    : in std_ulogic;
-    base_i     : in std_ulogic_vector(2047 downto 0);
+    base_i     : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
     exponent_i : in std_ulogic_vector(19 downto 0);
-    modulus_i  : in std_ulogic_vector(2047 downto 0);
-    result_o   : out std_ulogic_vector(2047 downto 0);
+    modulus_i  : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
+    result_o   : out std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
     done_o     : out std_ulogic
   );
-end neorv32_secure_boot_rsa2048;
+end neorv32_secure_boot_rsa;
 
-architecture neorv32_secure_boot_rsa2048_rtl of neorv32_secure_boot_rsa2048 is
+architecture neorv32_secure_boot_rsa_rtl of neorv32_secure_boot_rsa is
 
   component neorv32_secure_boot_mod_mult is
+    generic (
+      RSA_KEY_SIZE : integer := RSA_KEY_SIZE
+    );
     port (
       clk_i    : in std_ulogic;
       rst_i    : in std_ulogic;
-      a_i      : in std_ulogic_vector(2047 downto 0);
-      b_i      : in std_ulogic_vector(2047 downto 0);
-      n_i      : in std_ulogic_vector(2047 downto 0);
+      a_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
+      b_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
+      n_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
       start_i  : in std_ulogic;
-      result_o : out std_ulogic_vector(2047 downto 0);
+      result_o : out std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
       done_o   : out std_ulogic
     );
   end component;
@@ -43,13 +49,13 @@ architecture neorv32_secure_boot_rsa2048_rtl of neorv32_secure_boot_rsa2048 is
   );
   signal current_state, next_state : state_t;
 
-  signal base_reg     : std_ulogic_vector(2047 downto 0);
+  signal base_reg     : std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
   signal exponent_index_reg : integer range 0 to 20;
-  signal result_reg   : std_ulogic_vector(2047 downto 0);
+  signal result_reg   : std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
 
   signal mod_mult_start_wire, mod_mult_done_wire : std_ulogic;
-  signal mod_mult_result_wire                    : std_ulogic_vector(2047 downto 0);
-  signal mod_mult_a_in_wire, mod_mult_b_in_wire  : std_ulogic_vector(2047 downto 0);
+  signal mod_mult_result_wire                    : std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
+  signal mod_mult_a_in_wire, mod_mult_b_in_wire  : std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
   signal rst_signal_wire                         : std_ulogic;
 
 begin
@@ -63,6 +69,9 @@ begin
   mod_mult_b_in_wire <= base_reg;
 
   mod_mult_inst : neorv32_secure_boot_mod_mult
+  generic map (
+    RSA_KEY_SIZE => RSA_KEY_SIZE
+  )
   port map
   (
     clk_i    => clk_i,
@@ -135,7 +144,7 @@ begin
         when LOAD =>
           base_reg     <= base_i;
           exponent_index_reg <= 0;
-          result_reg   <= std_ulogic_vector(to_unsigned(1, 2048));
+          result_reg   <= std_ulogic_vector(to_unsigned(1, RSA_KEY_SIZE));
           mod_mult_start_wire <= '0';
         when CHECK_EXP =>
           -- No datapath change
@@ -161,5 +170,5 @@ begin
 
   result_o <= result_reg;
 
-end neorv32_secure_boot_rsa2048_rtl;
+end neorv32_secure_boot_rsa_rtl;
 

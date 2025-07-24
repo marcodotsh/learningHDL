@@ -3,14 +3,17 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity neorv32_secure_boot_mod_mult is
+  generic (
+    RSA_KEY_SIZE : integer := 2048
+  );
   port (
     clk_i    : in std_ulogic;
     rst_i    : in std_ulogic;
-    a_i      : in std_ulogic_vector(2047 downto 0);
-    b_i      : in std_ulogic_vector(2047 downto 0);
-    n_i      : in std_ulogic_vector(2047 downto 0);
+    a_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
+    b_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
+    n_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
     start_i  : in std_ulogic;
-    result_o : out std_ulogic_vector(2047 downto 0);
+    result_o : out std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
     done_o   : out std_ulogic
   );
 end neorv32_secure_boot_mod_mult;
@@ -19,7 +22,7 @@ architecture neorv32_secure_boot_mod_mult_rtl of neorv32_secure_boot_mod_mult is
 
   component neorv32_secure_boot_serial_adder is
     generic (
-      WIDTH      : integer := 2050;
+      WIDTH      : integer := RSA_KEY_SIZE + 2;
       CHUNK_SIZE : integer := 36
     );
     port (
@@ -33,7 +36,7 @@ architecture neorv32_secure_boot_mod_mult_rtl of neorv32_secure_boot_mod_mult is
     );
   end component;
 
-  constant ADDER_WIDTH : integer := 2050;
+  constant ADDER_WIDTH : integer := RSA_KEY_SIZE + 2;
 
   type state_t is (
     IDLE,
@@ -48,7 +51,7 @@ architecture neorv32_secure_boot_mod_mult_rtl of neorv32_secure_boot_mod_mult is
   signal state : state_t := IDLE;
 
   signal result_reg : unsigned(ADDER_WIDTH - 1 downto 0);
-  signal index_reg  : integer range 0 to 2047 := 2047;
+  signal index_reg  : integer range 0 to RSA_KEY_SIZE - 1 := RSA_KEY_SIZE - 1;
 
   signal adder_b_wire                     : std_ulogic_vector(ADDER_WIDTH - 1 downto 0);
   signal adder_s_wire                     : std_ulogic_vector(ADDER_WIDTH - 1 downto 0);
@@ -80,7 +83,7 @@ begin
   begin
     if rst_i = '1' then
       state             <= IDLE;
-      index_reg         <= 2047;
+      index_reg         <= RSA_KEY_SIZE - 1;
       result_reg        <= (others => '0');
       adder_start_reg   <= '0';
       adder_add_sub_reg <= '0';
@@ -95,7 +98,7 @@ begin
 
         when LOAD             =>
           result_reg <= (others => '0');
-          index_reg  <= 2047;
+          index_reg  <= RSA_KEY_SIZE - 1;
           state      <= LOOP_START;
 
         when LOOP_START =>
@@ -157,7 +160,7 @@ begin
     end if;
   end process;
 
-  result_o <= std_ulogic_vector(result_reg(2047 downto 0));
+  result_o <= std_ulogic_vector(result_reg(RSA_KEY_SIZE - 1 downto 0));
   done_o   <= '1' when state = DONE_STATE else
     '0';
 

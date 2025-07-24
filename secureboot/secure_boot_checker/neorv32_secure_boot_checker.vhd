@@ -19,6 +19,7 @@ end neorv32_secure_boot_checker;
 
 architecture neorv32_secure_boot_checker_rtl of neorv32_secure_boot_checker is
 
+  constant RSA_KEY_SIZE : integer := 512;
   -- determine physical ROM size in WORDS (expand to next power of two) --
   constant boot_rom_size_index_c : natural                         := index_size_f((bootloader_init_size_c/4)); -- address with (words)
   constant boot_rom_size_c       : natural range 0 to iodev_size_c := (2 ** boot_rom_size_index_c); -- physical size in words
@@ -42,10 +43,10 @@ architecture neorv32_secure_boot_checker_rtl of neorv32_secure_boot_checker is
   -- RSA component signals
   signal rsa_start_reg    : std_ulogic;
   signal rsa_done_wire    : std_ulogic;
-  signal rsa_base_reg     : std_ulogic_vector(2047 downto 0); -- Now also serves as signature accumulator
+  signal rsa_base_reg     : std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0); -- Now also serves as signature accumulator
   signal rsa_exponent_reg : std_ulogic_vector(19 downto 0);
   -- rsa_modulus_reg removed
-  signal rsa_result_wire  : std_ulogic_vector(2047 downto 0);
+  signal rsa_result_wire : std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
 
   -- Hasher component signals
   signal hasher_start_reg         : std_ulogic;
@@ -54,10 +55,10 @@ architecture neorv32_secure_boot_checker_rtl of neorv32_secure_boot_checker is
   signal hasher_hash_wire         : std_ulogic_vector(255 downto 0);
 
   -- Memory access signals
-  signal addr_cnt_reg  : natural range 0 to 64;
+  signal addr_cnt_reg : natural range 0 to RSA_KEY_SIZE/32;
   -- signature_reg removed
-  signal length_reg    : std_ulogic_vector(31 downto 0);
-  signal bus_req_reg   : bus_req_t;
+  signal length_reg  : std_ulogic_vector(31 downto 0);
+  signal bus_req_reg : bus_req_t;
 
   signal hasher_bus_req_wire : bus_req_t;
 
@@ -65,7 +66,10 @@ architecture neorv32_secure_boot_checker_rtl of neorv32_secure_boot_checker is
 
 begin
 
-  rsa_inst : entity work.neorv32_secure_boot_rsa2048
+  rsa_inst : entity work.neorv32_secure_boot_rsa
+    generic map(
+      RSA_KEY_SIZE => RSA_KEY_SIZE
+    )
     port map
     (
       clk_i      => clk_i,
@@ -114,7 +118,7 @@ begin
 
       when READ_SIGNATURE_RSP =>
         if bus_rsp_i.ack = '1' then
-          if addr_cnt_reg = 63 then
+          if addr_cnt_reg = (RSA_KEY_SIZE/32) - 1 then
             next_state <= START_RSA;
           else
             next_state <= READ_SIGNATURE_REQ;
@@ -171,32 +175,32 @@ begin
     elsif rising_edge(clk_i) then
       case current_state is
         when IDLE =>
-          cpu_rstn_reg  <= '1';
-          addr_cnt_reg  <= 0;
-          rsa_base_reg  <= (others => '0'); -- Clear rsa_base_reg for new signature
-          length_reg    <= (others => '0');
-          bus_req_reg   <= req_terminate_c;
+          cpu_rstn_reg <= '1';
+          addr_cnt_reg <= 0;
+          rsa_base_reg <= (others => '0'); -- Clear rsa_base_reg for new signature
+          length_reg   <= (others => '0');
+          bus_req_reg  <= req_terminate_c;
 
         when READ_SIGNATURE_REQ =>
-          bus_req_reg.addr <= std_ulogic_vector(to_unsigned((boot_rom_size_c - 65 + addr_cnt_reg) * 4, 32));
+          bus_req_reg.addr <= std_ulogic_vector(to_unsigned((boot_rom_size_c - (RSA_KEY_SIZE/32) - 1 + addr_cnt_reg) * 4, 32));
           bus_req_reg.stb  <= '1';
 
         when READ_SIGNATURE_RSP =>
           if bus_rsp_i.ack = '1' then
-            bus_req_reg.stb                                                                 <= '0';
-            rsa_base_reg((63 - addr_cnt_reg + 1) * 32 - 1 downto (63 - addr_cnt_reg) * 32) <= bus_rsp_i.data; -- Write directly to rsa_base_reg
-            addr_cnt_reg                                                                    <= addr_cnt_reg + 1;
+            bus_req_reg.stb                                                                                                      <= '0';
+            rsa_base_reg(((RSA_KEY_SIZE/32) - 1 - addr_cnt_reg + 1) * 32 - 1 downto ((RSA_KEY_SIZE/32) - 1 - addr_cnt_reg) * 32) <= bus_rsp_i.data; -- Write directly to rsa_base_reg
+            addr_cnt_reg                                                                                                         <= addr_cnt_reg + 1;
           end if;
 
         when START_RSA =>
-          rsa_start_reg    <= '1';
+          rsa_start_reg <= '1';
           -- rsa_base_reg is already loaded
           rsa_exponent_reg <= rsa_public_exponent_c;
           -- rsa_modulus_reg is directly connected
-          addr_cnt_reg     <= 64; -- Reset for next read
+          addr_cnt_reg <= (RSA_KEY_SIZE/32); -- Reset for next read
 
         when READ_BOOTLOADER_LENGTH_REQ =>
-          bus_req_reg.addr <= std_ulogic_vector(to_unsigned((boot_rom_size_c - 65 + addr_cnt_reg) * 4, 32));
+          bus_req_reg.addr <= std_ulogic_vector(to_unsigned((boot_rom_size_c - (RSA_KEY_SIZE/32) - 1 + addr_cnt_reg) * 4, 32));
           bus_req_reg.stb  <= '1';
 
         when READ_BOOTLOADER_LENGTH_RSP =>

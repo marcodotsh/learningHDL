@@ -252,13 +252,13 @@ begin
     wait for 20 ns;
     rstn_i <= '1';
     wait for 10 ns;
-    words_to_read_i <= x"000003dd";
+    words_to_read_i <= x"00000250";
     start_i         <= '1';
     wait for 10 ns;
     start_i <= '0';
     wait until done_o = '1';
     report "Hash full bootloader: " & to_hstring(hash_o);
-    assert hash_o(255 downto 0) = x"0DB190968A7394EE9FB29BAA16ED4FA67AD745949A7B9A0D51779228E3373F18"
+    assert hash_o(255 downto 0) = x"44f4a9cc1784cb5d3fcf4778837e1ecedb1343ce795bb500be53e921ddf0812d"
     report "Hash full bootloader: assertion failed!" severity error;
 
     wait;

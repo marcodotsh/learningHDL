@@ -8,14 +8,14 @@ entity neorv32_secure_boot_serial_adder is
     CHUNK_SIZE : integer := 32
   );
   port (
-    clk_i    : in std_ulogic;
-    rst_i    : in std_ulogic;
-    start_i  : in std_ulogic;
-    add_sub_i: in std_ulogic; -- '0' for add, '1' for sub
-    a_i      : in std_ulogic_vector(WIDTH - 1 downto 0);
-    b_i      : in std_ulogic_vector(WIDTH - 1 downto 0);
-    s_o      : out std_ulogic_vector(WIDTH - 1 downto 0);
-    done_o   : out std_ulogic
+    clk_i     : in std_ulogic; -- global clock line
+    rst_i     : in std_ulogic; -- async reset
+    start_i   : in std_ulogic; -- start signal
+    add_sub_i : in std_ulogic; -- '0' for add, '1' for sub
+    a_i       : in std_ulogic_vector(WIDTH - 1 downto 0); -- first operand of the addition
+    b_i       : in std_ulogic_vector(WIDTH - 1 downto 0); -- second operand of the addition
+    s_o       : out std_ulogic_vector(WIDTH - 1 downto 0); -- result of the addition
+    done_o    : out std_ulogic -- done signal
   );
 end neorv32_secure_boot_serial_adder;
 
@@ -27,13 +27,12 @@ architecture neorv32_secure_boot_serial_adder_rtl of neorv32_secure_boot_serial_
   constant NUM_CHUNKS   : integer := (WIDTH + CHUNK_SIZE - 1) / CHUNK_SIZE;
   constant PADDED_WIDTH : integer := NUM_CHUNKS * CHUNK_SIZE;
 
-  -- Explicitly define chunks as an array to guide the synthesizer
   type chunk_array_t is array (0 to NUM_CHUNKS - 1) of unsigned(CHUNK_SIZE - 1 downto 0);
   signal a_chunks, b_chunks : chunk_array_t;
 
   signal s_reg       : unsigned(PADDED_WIDTH - 1 downto 0);
-  signal chunk_index : integer range 0 to NUM_CHUNKS - 1;
-  signal carry       : std_ulogic;
+  signal chunk_index_reg : integer range 0 to NUM_CHUNKS - 1;
+  signal carry_reg       : std_ulogic;
 
 begin
 
@@ -51,8 +50,8 @@ begin
     if rst_i = '1' then
       state       <= IDLE;
       s_reg       <= (others => '0');
-      chunk_index <= 0;
-      carry       <= '0';
+      chunk_index_reg <= 0;
+      carry_reg       <= '0';
       done_o      <= '0';
     elsif rising_edge(clk_i) then
       done_o <= '0';
@@ -60,15 +59,14 @@ begin
         when IDLE =>
           if start_i = '1' then
             s_reg <= (others => '0');
-            chunk_index <= 0;
-            carry       <= add_sub_i; -- Start with carry=1 for subtraction
+            chunk_index_reg <= 0;
+            carry_reg       <= add_sub_i; -- Start with carry=1 for subtraction
             state       <= RUN;
           end if;
 
         when RUN =>
-          -- Select the current chunk using a simple array lookup (efficient MUX)
-          a_chunk := a_chunks(chunk_index);
-          b_chunk_mod := b_chunks(chunk_index);
+          a_chunk := a_chunks(chunk_index_reg);
+          b_chunk_mod := b_chunks(chunk_index_reg);
 
           -- Modify B for subtraction
           if add_sub_i = '1' then
@@ -78,15 +76,15 @@ begin
           -- Perform chunk addition
           sum_chunk := resize(a_chunk, CHUNK_SIZE + 1) +
                        resize(b_chunk_mod, CHUNK_SIZE + 1) +
-                       resize(unsigned'('0' & carry), CHUNK_SIZE + 1);
+                       resize(unsigned'('0' & carry_reg), CHUNK_SIZE + 1);
 
-          s_reg((chunk_index + 1) * CHUNK_SIZE - 1 downto chunk_index * CHUNK_SIZE) <= sum_chunk(CHUNK_SIZE - 1 downto 0);
-          carry <= sum_chunk(CHUNK_SIZE);
+          s_reg((chunk_index_reg + 1) * CHUNK_SIZE - 1 downto chunk_index_reg * CHUNK_SIZE) <= sum_chunk(CHUNK_SIZE - 1 downto 0);
+          carry_reg <= sum_chunk(CHUNK_SIZE);
 
-          if chunk_index = NUM_CHUNKS - 1 then
+          if chunk_index_reg = NUM_CHUNKS - 1 then
             state <= DONE;
           else
-            chunk_index <= chunk_index + 1;
+            chunk_index_reg <= chunk_index_reg + 1;
           end if;
 
         when DONE =>

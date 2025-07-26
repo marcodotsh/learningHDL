@@ -36,8 +36,8 @@ architecture neorv32_secure_boot_rsa_tb of neorv32_secure_boot_rsa_tb is
 
   constant modulus_c             : std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0) := x"A694B13587D61A047502D9E8EDC0E39E89D33DA16D226249A4EE7B504ECB07837BE3597E2AA11874E1829497B44D9BBA99006B122AAADFBB2D47F4636B124E735C7F174900B6BFC74EBA94B5D3CB94BF5581C29F56E2696C28AB1DBF3380DCB3F8161431F80D8E78636C3EDAC88C95F5A1A7574912489D861190F6BF42B97A4CE244A013C773D8BACFB4B4D55CB31F5A0718FD64673DC2EF7A04149724BFA0586B2C45A3BF3CF0919B089EA987DBC64999C4A775C2CF9A7EA3505285899209ADF0BD208995B4A6048E24DCAE6E91B3BE62A11373690DF0C3C2C7E041EEFBA0AB0503E3584123D7D9D39CE2564938E9296BB276B28ABE6CE5B9EFBD73D2E12263";
   constant signature_c           : std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0) := x"0f65f1784631153d25938ef6f65683e780dcdb65dfba7b4eb5302d9915c3e96ee55d997794816965a322009ba908c72e986c710bd533936191d55f96a994e40931e15b801ec5e1808125161a24b2ba7d598ac39cbec0c1903b4e7d861836fa2901af7f894ba18150d8c0803a5088269f17232ea541f469553cd87f8a52d6cd5076bc7a14ce305962b06240169891e4b5856d75dd945660f93fa385b4edf89f98d6b2cf9b62fd32d06ac13f462cdce442364b21f29671b329c01ab3615d9fff34e481dfb569b5671b918d7a995cab9d41eaa87aef11ba12467017ae52ce1bb3752c1c9f3722a142cc3739295e179f5296d2c68cde8537a27d9a41789239a7865e";
-  constant exponent_c            : std_ulogic_vector(19 downto 0)   := std_ulogic_vector(to_unsigned(65537, 20));
-  constant expected_result_lsb_c : std_ulogic_vector(255 downto 0)  := x"0DB190968A7394EE9FB29BAA16ED4FA67AD745949A7B9A0D51779228E3373F18";
+  constant exponent_c            : std_ulogic_vector(19 downto 0)               := std_ulogic_vector(to_unsigned(65537, 20));
+  constant expected_result_lsb_c : std_ulogic_vector(255 downto 0)              := x"0DB190968A7394EE9FB29BAA16ED4FA67AD745949A7B9A0D51779228E3373F18";
 
   function to_hstring(slv : std_ulogic_vector) return string is
     variable result         : string(1 to slv'length/4);
@@ -75,7 +75,7 @@ begin
 
   -- Instantiate the RSA_core module
   uut : neorv32_secure_boot_rsa
-  generic map (
+  generic map(
     RSA_KEY_SIZE => RSA_KEY_SIZE
   )
   port map
@@ -121,5 +121,3 @@ begin
   end process;
 
 end neorv32_secure_boot_rsa_tb;
-
-

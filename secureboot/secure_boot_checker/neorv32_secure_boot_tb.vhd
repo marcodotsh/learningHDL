@@ -81,7 +81,7 @@ begin
     rstn_i <= '1';
 
     -- Wait for the cpu_rstn to go high
-    wait until cpu_rstn_o = '0';
+    wait until cpu_rstn_o = '1';
     report "CPU reset disabled. Secure boot successful!";
 
     -- Stop the simulation

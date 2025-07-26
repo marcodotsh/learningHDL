@@ -7,14 +7,14 @@ entity neorv32_secure_boot_mod_mult is
     RSA_KEY_SIZE : integer := 2048
   );
   port (
-    clk_i    : in std_ulogic;
-    rst_i    : in std_ulogic;
-    a_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
-    b_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
-    n_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
-    start_i  : in std_ulogic;
-    result_o : out std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0);
-    done_o   : out std_ulogic
+    clk_i    : in std_ulogic; -- global clock line
+    rst_i    : in std_ulogic; -- async reset
+    a_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0); -- first operand of modular multiplication
+    b_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0); -- second operand of modular multiplication
+    n_i      : in std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0); -- modulus of modular multiplication
+    start_i  : in std_ulogic; -- start signal
+    result_o : out std_ulogic_vector(RSA_KEY_SIZE - 1 downto 0); -- operation result
+    done_o   : out std_ulogic -- done signal
   );
 end neorv32_secure_boot_mod_mult;
 
@@ -23,7 +23,7 @@ architecture neorv32_secure_boot_mod_mult_rtl of neorv32_secure_boot_mod_mult is
   component neorv32_secure_boot_serial_adder is
     generic (
       WIDTH      : integer := RSA_KEY_SIZE + 2;
-      CHUNK_SIZE : integer := 35
+      CHUNK_SIZE : integer := 9
     );
     port (
       clk_i     : in std_ulogic;

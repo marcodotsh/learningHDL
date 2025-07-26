@@ -37,21 +37,21 @@ entity neorv32_secure_boot_sha256_core is
     RESET_VALUE : std_ulogic := '0' --reset enable value
   );
   port (
-    clk_i           : in std_ulogic;
-    rst_i           : in std_ulogic;
+    clk_i           : in std_ulogic; -- global clock line
+    rst_i           : in std_ulogic; -- async reset, see RESET_VALUE for polarity
     block_waiting_o : out std_ulogic; -- core raises this when it is waiting for a new block to process
     block_valid_i   : in std_ulogic; -- testbench raises this to indicate a new block is ready
     block_process_o : out std_ulogic; -- core raises this when it is processing a block
     n_blocks_i      : in std_ulogic_vector(31 downto 0); --N, the number of (padded) message blocks
-    msg_block_i     : in std_ulogic_vector(0 to (16 * WORD_SIZE) - 1);
-    done_o          : out std_ulogic;
+    msg_block_i     : in std_ulogic_vector(0 to (16 * WORD_SIZE) - 1); -- the message block to process
+    done_o          : out std_ulogic; -- done signal
     data_o          : out std_ulogic_vector((WORD_SIZE * 8) - 1 downto 0) --SHA-256 results in a 256-bit hash value
   );
 end entity;
 
 architecture neorv32_secure_boot_sha256_core_rtl of neorv32_secure_boot_sha256_core is
-  signal hash_round_counter_reg  : natural := 0;
-  signal hash_02_counter_reg     : integer range 0 to 64 := 0;
+  signal hash_round_counter_reg : natural               := 0;
+  signal hash_02_counter_reg    : integer range 0 to 64 := 0;
 
   --Temporary words
   signal T1 : std_ulogic_vector(WORD_SIZE - 1 downto 0) := (others => '0');
@@ -88,13 +88,13 @@ architecture neorv32_secure_boot_sha256_core_rtl of neorv32_secure_boot_sha256_c
   );
 
   -- Area-optimized message schedule (16-word circular buffer)
-  signal W : M_DATA;
-  signal w_temp : std_ulogic_vector(WORD_SIZE-1 downto 0);
-  signal w_current : std_ulogic_vector(WORD_SIZE-1 downto 0);
+  signal W         : M_DATA;
+  signal w_temp    : std_ulogic_vector(WORD_SIZE - 1 downto 0);
+  signal w_current : std_ulogic_vector(WORD_SIZE - 1 downto 0);
 
   --Hash values w/ initial hash values; 8 32-bit words
-  signal HV                : H_DATA;
-  signal HV_INITIAL_VALUES : H_DATA := (X"6a09e667", X"bb67ae85", X"3c6ef372",
+  signal HV                  : H_DATA;
+  constant HV_INITIAL_VALUES : H_DATA := (X"6a09e667", X"bb67ae85", X"3c6ef372",
   X"a54ff53a", X"510e527f", X"9b05688c",
   X"1f83d9ab", X"5be0cd19");
   --intermediate Message block values; for use with a for-generate loop;
@@ -154,8 +154,9 @@ begin
   end process;
 
   -- Combinatorial logic for w_temp
-  w_temp <= std_ulogic_vector(unsigned(SIGMA_LCASE_1(W(14))) + unsigned(W(9)) + unsigned(SIGMA_LCASE_0(W(1))) + unsigned(W(0)));
-  w_current <= w_temp when hash_02_counter_reg >= 16 else W(hash_02_counter_reg);
+  w_temp    <= std_ulogic_vector(unsigned(SIGMA_LCASE_1(W(14))) + unsigned(W(9)) + unsigned(SIGMA_LCASE_0(W(1))) + unsigned(W(0)));
+  w_current <= w_temp when hash_02_counter_reg >= 16 else
+    W(hash_02_counter_reg);
 
   process (clk_i, rst_i)
   begin
@@ -213,9 +214,10 @@ begin
           b <= a;
           a <= std_ulogic_vector(unsigned(T1) + unsigned(T2));
 
-          if(hash_02_counter_reg >= 16) then
+          if (hash_02_counter_reg >= 16) then
+            -- shift the by 1 the message schedule 32-bit words
             W(0 to 14) <= W(1 to 15);
-            W(15) <= w_temp;
+            W(15)      <= w_temp;
           end if;
           hash_02_counter_reg <= hash_02_counter_reg + 1;
         when HASH_03 =>

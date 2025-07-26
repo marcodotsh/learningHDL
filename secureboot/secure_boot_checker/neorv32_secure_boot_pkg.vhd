@@ -1,4 +1,3 @@
--- secure_boot_pkg.vhd
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -18,7 +17,6 @@ end neorv32_secure_boot_pkg;
 
 package body neorv32_secure_boot_pkg is
 
-  -- function to initialize the secure boot ROM
   function secure_boot_init_f(
     bootloader_image : mem32_t;
     secure_info      : mem32_t;

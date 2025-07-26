@@ -11,14 +11,14 @@ entity neorv32_secure_boot_boot_rom_hasher is
     RESET_VALUE : std_ulogic := '0'
   );
   port (
-    clk_i           : in std_ulogic;
-    rst_i           : in std_ulogic;
-    start_i         : in std_ulogic;
-    words_to_read_i : in std_ulogic_vector(31 downto 0);
-    bus_rsp_i       : in bus_rsp_t;
-    bus_req_o       : out bus_req_t;
-    done_o          : out std_ulogic;
-    hash_o          : out std_ulogic_vector((WORD_SIZE * 8) - 1 downto 0)
+    clk_i           : in std_ulogic; -- global clock line
+    rst_i           : in std_ulogic; -- async reset, low-active
+    start_i         : in std_ulogic; -- start signal
+    words_to_read_i : in std_ulogic_vector(31 downto 0); -- 32-bit words to read from boot rom
+    bus_rsp_i       : in bus_rsp_t; -- bus response
+    bus_req_o       : out bus_req_t; -- bus request
+    done_o          : out std_ulogic; -- done signal
+    hash_o          : out std_ulogic_vector((WORD_SIZE * 8) - 1 downto 0) -- hash result
   );
 end entity;
 
@@ -62,41 +62,8 @@ architecture neorv32_secure_boot_boot_rom_hasher_rtl of neorv32_secure_boot_boot
   signal finished_wire      : std_ulogic;
 
   -- signals to sha256 core
-  signal block_valid_reg  : std_ulogic;
-  signal n_blocks_wire    : std_ulogic_vector(31 downto 0);
-  -- msg_block_in_reg removed
-
-  function to_hstring(slv : std_ulogic_vector) return string is
-    variable result         : string(1 to slv'length/4);
-    variable v              : std_ulogic_vector(3 downto 0);
-    variable idx            : integer := 1;
-    variable i              : integer := slv'left;
-  begin
-    while i >= slv'right loop
-      v := slv(i downto i - 3);
-      case v is
-        when "0000" => result(idx) := '0';
-        when "0001" => result(idx) := '1';
-        when "0010" => result(idx) := '2';
-        when "0011" => result(idx) := '3';
-        when "0100" => result(idx) := '4';
-        when "0101" => result(idx) := '5';
-        when "0110" => result(idx) := '6';
-        when "0111" => result(idx) := '7';
-        when "1000" => result(idx) := '8';
-        when "1001" => result(idx) := '9';
-        when "1010" => result(idx) := 'A';
-        when "1011" => result(idx) := 'B';
-        when "1100" => result(idx) := 'C';
-        when "1101" => result(idx) := 'D';
-        when "1110" => result(idx) := 'E';
-        when others => result(idx) := 'F';
-      end case;
-      idx := idx + 1;
-      i   := i - 4;
-    end loop;
-    return result;
-  end function;
+  signal block_valid_reg : std_ulogic;
+  signal n_blocks_wire   : std_ulogic_vector(31 downto 0);
 
 begin
 
@@ -109,7 +76,7 @@ begin
       block_valid_i   => block_valid_reg,
       block_process_o => block_process_wire,
       n_blocks_i      => n_blocks_wire,
-      msg_block_i     => msg_block_buf_reg, -- Directly use msg_block_buf_reg
+      msg_block_i     => msg_block_buf_reg,
       done_o          => finished_wire,
       data_o          => hash_o
     );
@@ -125,7 +92,7 @@ begin
   end process;
 
   --next state logic
-  process (CURRENT_STATE, rst_i, start_i, bus_rsp_i, words_in_block_counter_reg, block_waiting_wire, block_process_wire, addr_reg, words_to_read_i, blocks_counter_reg)
+  process (CURRENT_STATE, rst_i, start_i, bus_rsp_i, words_in_block_counter_reg, block_waiting_wire, block_process_wire, addr_reg, words_to_read_i, blocks_counter_reg, n_blocks_wire)
   begin
     case CURRENT_STATE is
       when RESET =>
@@ -237,9 +204,8 @@ begin
           read_data_reg     <= (others => '0');
           block_valid_reg   <= '0';
           msg_block_buf_reg <= (others => '0');
-          -- wait for start signal
-        when CHECK_INPUT_END =>
-          -- No change, retain previous values
+        when CHECK_INPUT_END         =>
+          null;
         when MEM_REQ =>
           bus_req_reg.addr  <= std_ulogic_vector(unsigned(base_io_bootrom_c) + unsigned(addr_reg));
           bus_req_reg.data  <= (others => '0');
@@ -255,7 +221,6 @@ begin
           bus_req_reg.lock  <= '0';
           bus_req_reg.fence <= '0';
         when MEM_READ =>
-          -- Deassert stb, hold all other signals stable
           if bus_rsp_i.ack = '1' then
             bus_req_reg.stb <= '0';
             read_data_reg   <= std_ulogic_vector(bus_rsp_i.data);
@@ -275,32 +240,28 @@ begin
         when SEND_BLOCK =>
           if (block_waiting_wire = '1') then
             block_valid_reg    <= '1';
-            -- msg_block_in_reg <= msg_block_buf_reg; -- Removed
-            -- msg_block_buf_reg  <= (others => '0'); -- Moved to CHECK_PROGRESS
             blocks_counter_reg <= std_ulogic_vector(unsigned(blocks_counter_reg) + 1);
           end if;
         when CHECK_PROGRESS =>
           block_valid_reg <= '0';
           if (block_process_wire = '1') then
             words_in_block_counter_reg <= (others => '0');
-            msg_block_buf_reg  <= (others => '0'); -- Clear buffer after processing
+            msg_block_buf_reg          <= (others => '0'); -- Clear buffer after processing
           end if;
         when PAD_ONE_BIT =>
           msg_block_buf_reg(to_integer(32 * unsigned(words_in_block_counter_reg))) <= '1';
         when CHECK_LAST_BLOCK =>
-          -- No change, retain previous values
+          null;
         when SEND_BLOCK_AFTER_PAD =>
           if (block_waiting_wire = '1') then
             block_valid_reg    <= '1';
-            -- msg_block_in_reg   <= msg_block_buf_reg; -- Removed
-            -- msg_block_buf_reg  <= (others => '0'); -- Moved to CHECK_PROGRESS_AFTER_PAD
             blocks_counter_reg <= std_ulogic_vector(unsigned(blocks_counter_reg) + 1);
           end if;
         when CHECK_PROGRESS_AFTER_PAD =>
           block_valid_reg <= '0';
           if (block_process_wire = '1') then
             words_in_block_counter_reg <= (others => '0');
-            msg_block_buf_reg  <= (others => '0'); -- Clear buffer after processing
+            msg_block_buf_reg          <= (others => '0'); -- Clear buffer after processing
           end if;
         when ADD_TAIL =>
           for i in 0 to 63 loop
